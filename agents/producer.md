@@ -12,7 +12,7 @@
 1. اقرأ العروض الجاهزة:
    ```sql
    select * from offers
-   where status = 'approved' and permission = 'granted' and valid_until >= current_date
+   where status = 'approved' and permission in ('granted','public') and valid_until >= current_date
      and id not in (select offer_id from posts where offer_id is not null and kind in ('reel','carousel','post'))
    order by created_at limit 2;
    ```

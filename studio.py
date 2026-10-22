@@ -110,12 +110,18 @@ def receipt(o, x, y, w, cta="التفاصيل بالكابشن ←", title_size=
     old = (f"<div class='pr'><span class='lbl' style='font-weight:500'>السعر قبل</span>"
            f"<span class='old'>{money(o['old_price'])}<i></i></span></div>") if o.get("old_price") else ""
     no = f"وصل رقم {int(o['receipt_no']):04d}" if o.get("receipt_no") else ""
-    newp = money(o.get("new_price")); ps = price_size if len(newp) <= 6 else int(price_size * .86)
+    if o.get("new_price") not in (None, ""):
+        newp = money(o.get("new_price")); ps = price_size if len(newp) <= 6 else int(price_size * .86)
+        price = (f"<div class='pr' style='margin-top:4px'><span class='lbl'>هسه بـ</span>"
+                 f"<span class='new' style='font-size:{ps}px'>{newp}<small>د.ع</small></span></div>")
+    else:  # عرض نسبة فقط بدون أسعار معلنة
+        price = (f"<div class='pr' style='margin-top:4px'><span class='lbl'>الخصم</span>"
+                 f"<span class='new' style='font-size:{price_size}px'>{pct(o) or ''}%</span></div>")
     return f"""<div class='rc' style='left:{x}px;top:{y}px;width:{w}px'>
       <div class='no'><span>{' · '.join(x for x in [esc(o.get('category')), no] if x)}</span></div>
       <div class='ti' style='font-size:{title_size}px'>{esc(o.get('title'))}</div>
       <div class='dash'></div>{old}
-      <div class='pr' style='margin-top:4px'><span class='lbl'>هسه بـ</span><span class='new' style='font-size:{ps}px'>{newp}<small>د.ع</small></span></div>
+      {price}
       <div class='dash'></div>
       <div class='meta'><span>المكان: <b>{esc(o.get('area'))}</b></span><span>لغاية: <b>{esc(o.get('valid_until'))}</b></span></div>
       <div class='say'><b>وصلك العرض</b><span>{cta}</span></div></div>"""
