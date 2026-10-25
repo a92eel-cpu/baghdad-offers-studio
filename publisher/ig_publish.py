@@ -16,7 +16,7 @@
   IG_USER_ID  رقم الحساب
   IG_HOST     اختياري: graph.instagram.com (افتراضي، دخول إنستغرام) أو graph.facebook.com (دخول فيسبوك)
 """
-import json, os, sys, time, pathlib, datetime, urllib.request, urllib.parse
+import json, os, sys, time, pathlib, datetime, subprocess, urllib.request, urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PENDING, DONE = ROOT / "queue/pending", ROOT / "queue/done"
@@ -103,6 +103,19 @@ def publish_one(f, j):
     print(f.name, res, flush=True)
 
 
+def save_state():
+    """يحفظ الطابور بالمستودع بعد كل نشر، حتى ما يتكرر عرض إذا انقطع التشغيل."""
+    if os.environ.get("GIT_PUSH") != "1": return
+    sh = lambda *a: subprocess.run(a, cwd=ROOT, capture_output=True, text=True)
+    sh("git", "add", "-A", "queue")
+    if sh("git", "diff", "--cached", "--quiet").returncode == 0: return
+    sh("git", "commit", "-m", "نشر: تحديث الطابور")
+    for _ in range(3):
+        sh("git", "pull", "--rebase", "-q", "origin", "main")
+        if sh("git", "push", "-q", "origin", "HEAD:main").returncode == 0: return
+        time.sleep(3)
+
+
 def main():
     """يبقى شغّال لحد MAX_MINUTES: ينشر كل عرض بوقته بالضبط (كرون GitHub يتأخر أحياناً)."""
     if not (TOKEN and USER):
@@ -114,7 +127,7 @@ def main():
         if items:
             if quota_left() < 2:
                 print("حد إنستغرام اليومي خلص — نكمل بالتشغيل الجاي."); break
-            publish_one(*items[0])
+            publish_one(*items[0]); save_state()
             if due():  # متأخرين: خلّ 10 دقائق بين كل عرضين
                 time.sleep(min(600, max(0, end - time.time())))
             continue

@@ -24,7 +24,11 @@ jobs:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_HOST: ${{ secrets.IG_HOST }}
           MAX_MINUTES: "25"
-        run: python3 publisher/ig_publish.py
+          GIT_PUSH: "1"
+        run: |
+          git config user.name "baghdad-offers-bot"
+          git config user.email "bot@users.noreply.github.com"
+          python3 publisher/ig_publish.py
       - name: Save queue state
         run: |
           git config user.name "baghdad-offers-bot"
