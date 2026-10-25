@@ -10,5 +10,7 @@
    "x": 0.5,
    "y": 0.45
   }
- ]
+ ],
+ "attempts": 1,
+ "last_error": "400 {\"error\":{\"message\":\"User is performing too many actions\",\"type\":\"OAuthException\",\"is_transient\":false,\"code\":9,\"error_subcode\":2207042,\"error_user_title\":\"Media Publish Limit Exceeded\",\"error_user_msg\":\"You reached maximum number of posts that is allowed to be published by Content Publishing API.\",\"fbtrace_id\":\"AQwgmjC0WY4EN5sJtS9tT-4\"}}"
 }
