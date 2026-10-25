@@ -21,7 +21,7 @@ import json, os, sys, time, pathlib, datetime, urllib.request, urllib.parse
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PENDING, DONE = ROOT / "queue/pending", ROOT / "queue/done"
 TOKEN, USER = os.environ.get("IG_TOKEN"), os.environ.get("IG_USER_ID")
-HOST = os.environ.get("IG_HOST", "graph.instagram.com")
+HOST = os.environ.get("IG_HOST") or "graph.instagram.com"
 API = f"https://{HOST}/v21.0"
 PER_RUN = int(os.environ.get("PER_RUN", "1"))  # عرض واحد كل تشغيل = كل 10 دقائق
 
