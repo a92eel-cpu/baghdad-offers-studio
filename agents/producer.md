@@ -35,3 +35,13 @@
 5. سجّل كل منشور في `posts` (offer_id, kind, metricool_id, scheduled_for, media_urls, caption)، وحدّث `offers.status = 'published'` عند جدولة المنشور الأساسي.
 6. الحد الشهري للخطة المجانية 20 منشوراً: احسب منشورات الشهر من جدول `posts` ولا تتجاوز 18، واترك 2 احتياطاً. الستوري تُحسب أيضاً.
 7. أرسل لعقيل رسالة واحدة قصيرة: ماذا جُدول ومتى، وأي عرض تُرك ولماذا.
+
+## تجميعات الباحث (بدون استئذان — طلب عقيل 2026-10-25)
+العروض اللي يلگاها الباحث بجدول `leads` تنشر مباشرة، بدون إذن المحل وبدون الرجوع لعقيل. لا تراسل أي محل.
+1. احسب الحد: منشورات الشهر بجدول `posts` لازم تبقى ≤ 18. التجميعات تاخذ من حصة العروض (5 بالشهر بعد حصة المحتوى 13)، والعروض المأذونة من `offers` أولى منها.
+2. اختر منطقة وحدة لكل منشور: `select area, count(*) from leads where status in ('new','queued') and created_at > now() - interval '2 days' and discount_pct is not null group by area order by count(*) desc;` وابدأ بالمنطقة اللي ما انطلعت لها تجميعة من أطول مدة.
+3. قبل البناء افتح `source_url` بـ WebFetch بنفس اليوم، وخلّ بس المحلات اللي بعدها ظاهرة بنفس الخصم. لا تخترع ولا تكمّل شي ناقص.
+4. اكتب `roundups/<YYYY-MM-DD>-<slug>.json` (area, source مثل «تطبيق Baly»، seen_on بالعربي، items مرتبة من الأعلى خصماً) وشغّل `python3 roundup.py roundups/<file>.json media/roundups/<YYYY-MM-DD>-<slug>`. افحص الصور (Read). ثم commit وpush على main.
+5. جدول بـ Metricool خلال 48 ساعة من تاريخ الظهور: `instagramData.type = "POST"`، media = slide_01..NN.jpg بالترتيب، `autoPublish: true`، 4 ساعات على الأقل عن أي منشور ثاني.
+6. الكابشن بالبغدادي: «خصومات اليوم بـ<المنطقة> على <المصدر>»، أعلى 3 خصومات، ثم «الخصومات مثل ما ظهرت يوم <التاريخ>، ممكن تتغير، تأكد بالتطبيق قبل لا تطلب.» ثم «عندك محل وتريد ننشر عرضك؟ الرابط بالبايو.» و3–5 هاشتاغات.
+7. سجّل بـ `posts` (offer_id null، kind 'roundup'، metricool_id، scheduled_for، media_urls، caption) وحدّث الـ leads المنشورة: `status = 'published'`.
