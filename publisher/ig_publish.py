@@ -23,7 +23,6 @@ PENDING, DONE = ROOT / "queue/pending", ROOT / "queue/done"
 TOKEN, USER = os.environ.get("IG_TOKEN"), os.environ.get("IG_USER_ID")
 HOST = os.environ.get("IG_HOST") or "graph.instagram.com"
 API = f"https://{HOST}/v21.0"
-PER_RUN = int(os.environ.get("PER_RUN", "1"))  # عرض واحد كل تشغيل = كل 10 دقائق
 
 
 def call(method, path, **params):
@@ -72,34 +71,58 @@ def due():
     return [x[1:] for x in sorted(items, key=lambda x: x[0])]
 
 
+def next_time():
+    ts = []
+    for f in PENDING.glob("*.json"):
+        j = json.loads(f.read_text())
+        ts.append(datetime.datetime.fromisoformat(j.get("not_before", "2000-01-01T00:00:00+00:00")))
+    return min(ts) if ts else None
+
+
+def publish_one(f, j):
+    res = {"published_at": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    try:
+        p = dict(image_url=j["image_url"], caption=j.get("caption", ""))
+        if j.get("user_tags"): p["user_tags"] = json.dumps(j["user_tags"])
+        try:
+            res["post_id"] = publish(**p)
+        except RuntimeError as e:  # تاك غلط (حساب خاص/غير موجود) ما يوقف العرض
+            if "user_tags" in p:
+                res["tag_error"] = str(e); p.pop("user_tags"); res["post_id"] = publish(**p)
+            else: raise
+        if j.get("story_url"):
+            res["story_id"] = publish(image_url=j["story_url"], media_type="STORIES")
+    except Exception as e:
+        res["error"] = str(e); print(f.name, "ERROR", e)
+        if "post_id" not in res:
+            j["attempts"] = j.get("attempts", 0) + 1
+            if j["attempts"] < 2:
+                j["last_error"] = str(e); f.write_text(json.dumps(j, ensure_ascii=False, indent=1)); return
+    j["result"] = res
+    (DONE / f.name).write_text(json.dumps(j, ensure_ascii=False, indent=1)); f.unlink()
+    print(f.name, res, flush=True)
+
+
 def main():
+    """يبقى شغّال لحد MAX_MINUTES: ينشر كل عرض بوقته بالضبط (كرون GitHub يتأخر أحياناً)."""
     if not (TOKEN and USER):
         print("IG_TOKEN / IG_USER_ID ناقصة — ما نشرت شي."); return 0
     DONE.mkdir(parents=True, exist_ok=True)
-    for f, j in due()[:PER_RUN]:
-        if quota_left() < 2:
-            print("حد إنستغرام اليومي خلص — نكمل بالتشغيل الجاي."); break
-        res = {"published_at": datetime.datetime.now(datetime.timezone.utc).isoformat()}
-        try:
-            p = dict(image_url=j["image_url"], caption=j.get("caption", ""))
-            if j.get("user_tags"): p["user_tags"] = json.dumps(j["user_tags"])
-            try:
-                res["post_id"] = publish(**p)
-            except RuntimeError as e:  # تاك غلط (حساب خاص/غير موجود) ما يوقف العرض
-                if "user_tags" in p and "tag" in str(e).lower():
-                    res["tag_error"] = str(e); p.pop("user_tags"); res["post_id"] = publish(**p)
-                else: raise
-            if j.get("story_url"):
-                res["story_id"] = publish(image_url=j["story_url"], media_type="STORIES")
-        except Exception as e:
-            res["error"] = str(e); print(f.name, "ERROR", e)
-            if "post_id" not in res:  # نخليه بالطابور لمحاولة وحدة ثانية
-                j["attempts"] = j.get("attempts", 0) + 1
-                if j["attempts"] < 2:
-                    j["last_error"] = str(e); f.write_text(json.dumps(j, ensure_ascii=False, indent=1)); continue
-        j["result"] = res
-        (DONE / f.name).write_text(json.dumps(j, ensure_ascii=False, indent=1)); f.unlink()
-        print(f.name, res)
+    end = time.time() + 60 * float(os.environ.get("MAX_MINUTES", "25"))
+    while time.time() < end:
+        items = due()
+        if items:
+            if quota_left() < 2:
+                print("حد إنستغرام اليومي خلص — نكمل بالتشغيل الجاي."); break
+            publish_one(*items[0])
+            if due():  # متأخرين: خلّ 10 دقائق بين كل عرضين
+                time.sleep(min(600, max(0, end - time.time())))
+            continue
+        nt = next_time()
+        if not nt: break
+        wait = (nt - datetime.datetime.now(datetime.timezone.utc)).total_seconds()
+        if wait > end - time.time(): break
+        time.sleep(max(5, wait))
     return 0
 
 

@@ -11,13 +11,19 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Latest queue
+        run: git pull -q origin main
       - name: Publish due item
         env:
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_HOST: ${{ secrets.IG_HOST }}
+          MAX_MINUTES: "25"
         run: python3 publisher/ig_publish.py
       - name: Save queue state
         run: |
