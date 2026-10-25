@@ -3,53 +3,54 @@
 الاستخدام:
   python3 offer_card.py card.json OUTDIR
 card.json:
-  merchant, handle (بدون @، اختياري — فقط إذا تأكدنا منه), logo (مسار صورة، اختياري),
+  merchant, category (مطاعم/ملابس/…), art (اختياري: نوع الرسمة من illus.py), handle (بدون @، فقط إذا تأكدنا منه),
   pct, title, area, where (مثل «تطبيق Baly»), seen_on (نص عربي), valid_until (نص عربي، اختياري)
 المخرجات: post.jpg و story.jpg
 """
 import json, sys, pathlib, asyncio
-from studio import doc, esc, uri, our_badge
+from studio import doc, esc, our_badge
+from illus import svg, kind_for
 
 CCSS = """
-.card{position:absolute;left:60px;right:60px;background:var(--paper);border-radius:36px;padding:48px 52px}
-.who{display:flex;align-items:center;gap:28px}
-.who .lg{flex:none;width:150px;height:150px;border-radius:50%;background:#fff center/cover no-repeat;box-shadow:0 0 0 5px var(--ink);
-  display:flex;align-items:center;justify-content:center;font-family:Alex;font-weight:900;font-size:64px;color:var(--ink)}
-.who .nm{font-family:Taj;font-weight:800;font-size:56px;line-height:1.2}
-.who .hd{font-weight:800;font-size:34px;color:var(--coral);direction:ltr;text-align:right;margin-top:6px}
-.pct{display:flex;align-items:baseline;gap:18px;margin:36px 0 10px}
-.pct b{font-family:Alex;font-weight:900;font-size:190px;line-height:.9;color:var(--coral)}
-.pct span{font-family:Alex;font-weight:900;font-size:64px}
-.ttl{font-weight:800;font-size:40px;line-height:1.4}
-.dash{border-top:4px dashed rgba(21,17,43,.25);margin:30px -6px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:14px 26px;font-size:34px}
+.art{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:var(--ink-2);
+  box-shadow:0 0 0 10px rgba(212,255,58,.18);display:flex;align-items:center;justify-content:center}
+.card{position:absolute;left:60px;right:60px;background:var(--paper);border-radius:36px;padding:44px 52px}
+.nm{font-family:Taj;font-weight:800;font-size:58px;line-height:1.2}
+.hd{font-weight:800;font-size:34px;color:var(--coral);direction:ltr;text-align:right;margin-top:4px}
+.pct{display:flex;align-items:baseline;gap:18px;margin:22px 0 4px}
+.pct b{font-family:Alex;font-weight:900;font-size:150px;line-height:.95;color:var(--coral)}
+.pct span{font-family:Alex;font-weight:900;font-size:56px}
+.ttl{font-weight:800;font-size:38px;line-height:1.4}
+.dash{border-top:4px dashed rgba(21,17,43,.25);margin:26px -6px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:12px 26px;font-size:32px}
 .kv span{font-weight:500;color:var(--muted)} .kv b{font-weight:800}
 .tagme{position:absolute;left:60px;right:60px;text-align:center;font-family:Alex;font-weight:900;font-size:40px;color:var(--lime);direction:ltr}
 .fine{position:absolute;left:60px;right:60px;text-align:center;font-weight:700;font-size:26px;color:rgba(245,240,228,.7)}
 """
 
+def art(c, top, d):
+    k = c.get("art") or kind_for(c.get("merchant"), c.get("category", "مطاعم"))
+    return f"<div class='art' style='top:{top}px;width:{d}px;height:{d}px'>{svg(k, int(d*.78))}</div>"
+
 def body(c):
-    initial = esc(c["merchant"].strip()[:1])
-    logo = (f"<div class='lg' style=\"background-image:url('{uri(c['logo'])}')\"></div>" if c.get("logo")
-            else f"<div class='lg'>{initial}</div>")
     hd = f"<div class='hd'>@{esc(c['handle'])}</div>" if c.get("handle") else ""
     rows = [("المنطقة", c.get("area")), ("وين", c.get("where")), ("لغاية", c.get("valid_until")), ("ظهر يوم", c.get("seen_on"))]
     kv = "".join(f"<span>{k}</span><b>{esc(v)}</b>" for k, v in rows if v)
-    return (f"<div class='who'>{logo}<div><div class='nm'>{esc(c['merchant'])}</div>{hd}</div></div>"
+    return (f"<div class='nm'>{esc(c['merchant'])}</div>{hd}"
             f"<div class='pct'><b>{int(c['pct'])}%</b><span>خصم</span></div>"
             f"<div class='ttl'>{esc(c.get('title'))}</div><div class='dash'></div><div class='kv'>{kv}</div>")
 
 def post(c):
-    return doc(f"<style>{CCSS}</style>" + our_badge(60, 56) +
-               f"<div class='card' style='top:170px'>{body(c)}</div>"
-               "<div class='fine' style='bottom:40px'>الخصم مثل ما ظهر بالمصدر، تأكد قبل لا تطلب</div>", 1080, 1350)
+    return doc(f"<style>{CCSS}</style>" + our_badge(60, 56) + art(c, 110, 330) +
+               f"<div class='card' style='top:470px'>{body(c)}</div>"
+               "<div class='fine' style='bottom:36px'>الخصم مثل ما ظهر بالمصدر، تأكد قبل لا تطلب</div>", 1080, 1350)
 
 def story(c):
     tag = f"@{esc(c['handle'])} · " if c.get("handle") else ""
-    return doc(f"<style>{CCSS}</style>" + our_badge(60, 250) +
-               f"<div class='card' style='top:380px'>{body(c)}</div>"
-               f"<div class='tagme' style='top:1500px'>{tag}@baghdad_offers</div>"
-               "<div class='fine' style='top:1580px'>الخصم مثل ما ظهر بالمصدر، تأكد قبل لا تطلب</div>", 1080, 1920)
+    return doc(f"<style>{CCSS}</style>" + our_badge(60, 240) + art(c, 300, 380) +
+               f"<div class='card' style='top:720px'>{body(c)}</div>"
+               f"<div class='tagme' style='top:1440px'>{tag}@baghdad_offers</div>"
+               "<div class='fine' style='top:1520px'>الخصم مثل ما ظهر بالمصدر، تأكد قبل لا تطلب</div>", 1080, 1920)
 
 async def shoot2(pages, out):
     # roundup.shoot يفترض 1080×1350؛ هنا نحتاج قياسين
