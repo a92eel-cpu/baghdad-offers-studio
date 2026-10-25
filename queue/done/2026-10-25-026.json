@@ -1,0 +1,14 @@
+{
+ "id": "2026-10-25-026",
+ "not_before": "2026-10-25T22:10:00+03:00",
+ "image_url": "https://raw.githubusercontent.com/a92eel-cpu/baghdad-offers-studio/main/media/cards/2026-10-25-026/post.jpg",
+ "story_url": "https://raw.githubusercontent.com/a92eel-cpu/baghdad-offers-studio/main/media/cards/2026-10-25-026/story.jpg",
+ "caption": "Fry lab - فراي لاب: خصم 30% على الطلب عبر تطبيق Baly\n\nظاهر بتطبيق Baly يوم ٢٥ تشرين الأول ضمن منطقة توصيل شارع فلسطين. الخصم ممكن يتغير، تأكد بالتطبيق قبل لا تطلب.\n\nعندك محل وتريد ننشر عرضك؟ الرابط بالبايو.\n\n#عروض_بغداد #شارع_فلسطين #خصومات_بغداد #مطاعم_بغداد #بغداد",
+ "user_tags": [],
+ "attempts": 2,
+ "last_error": "400 {\"error\":{\"message\":\"User is performing too many actions\",\"type\":\"OAuthException\",\"is_transient\":false,\"code\":9,\"error_subcode\":2207042,\"error_user_title\":\"Media Publish Limit Exceeded\",\"error_user_msg\":\"You reached maximum number of posts that is allowed to be published by Content Publishing API.\",\"fbtrace_id\":\"Azmowqwyb6XyjF1QDlVerhc\"}}",
+ "result": {
+  "published_at": "2026-10-25T19:20:09.958922+00:00",
+  "error": "400 {\"error\":{\"message\":\"User is performing too many actions\",\"type\":\"OAuthException\",\"is_transient\":false,\"code\":9,\"error_subcode\":2207042,\"error_user_title\":\"Media Publish Limit Exceeded\",\"error_user_msg\":\"You reached maximum number of posts that is allowed to be published by Content Publishing API.\",\"fbtrace_id\":\"AOOFbggRD4CL9NOze4TepTz\"}}"
+ }
+}
