@@ -1,0 +1,33 @@
+name: ناشر «قبل أن تنام»
+on:
+  schedule:
+    # كل 10 دقائق من 20:00 لـ 02:59 بتوقيت بغداد (17–23 UTC) — الصفحة ليلية
+    - cron: "*/10 17-23 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: qat-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: pages/qabl-an-tanam
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git pull -q origin main
+      - name: Publish due items
+        env:
+          IG_TOKEN: ${{ secrets.QAT_IG_TOKEN }}
+          IG_USER_ID: ${{ secrets.QAT_IG_USER_ID }}
+          MAX_MINUTES: "25"
+          GIT_PUSH: "1"
+        run: |
+          git config user.name "qabl-an-tanam-bot"
+          git config user.email "bot@users.noreply.github.com"
+          python3 publisher/ig_publish.py
