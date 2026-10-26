@@ -4,5 +4,7 @@
  "image_url": "https://raw.githubusercontent.com/a92eel-cpu/baghdad-offers-studio/main/media/cards/2026-10-26-001/post.jpg",
  "story_url": "https://raw.githubusercontent.com/a92eel-cpu/baghdad-offers-studio/main/media/cards/2026-10-26-001/story.jpg",
  "caption": "مشويات حجي حسين: خصم 50% على الطلب عبر تطبيق Baly\n\nظاهر بتطبيق Baly يوم ٢٦ تشرين الأول ضمن منطقة توصيل الكرادة. الخصم ممكن يتغير، تأكد بالتطبيق قبل لا تطلب.\n\nعندك محل وتريد ننشر عرضك؟ الرابط بالبايو.\n\n#عروض_بغداد #الكرادة #خصومات_بغداد #مطاعم_بغداد #بغداد",
- "user_tags": []
+ "user_tags": [],
+ "attempts": 1,
+ "last_error": "400 {\"error\":{\"message\":\"User is performing too many actions\",\"type\":\"OAuthException\",\"is_transient\":false,\"code\":9,\"error_subcode\":2207042,\"error_user_title\":\"Media Publish Limit Exceeded\",\"error_user_msg\":\"You reached maximum number of posts that is allowed to be published by Content Publishing API.\",\"fbtrace_id\":\"Alm6ehcYvDAoekPU45xb6_y\"}}"
 }
