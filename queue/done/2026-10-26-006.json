@@ -1,0 +1,14 @@
+{
+ "id": "2026-10-26-006",
+ "not_before": "2026-10-26T12:50:00+03:00",
+ "image_url": "https://raw.githubusercontent.com/a92eel-cpu/baghdad-offers-studio/main/media/cards/2026-10-26-006/post.jpg",
+ "story_url": "https://raw.githubusercontent.com/a92eel-cpu/baghdad-offers-studio/main/media/cards/2026-10-26-006/story.jpg",
+ "caption": "مخابز الكرادة: خصم 50% على الطلب عبر تطبيق Baly\n\nظاهر بتطبيق Baly يوم ٢٦ تشرين الأول ضمن منطقة توصيل حي الجامعة. الخصم ممكن يتغير، تأكد بالتطبيق قبل لا تطلب.\n\nعندك محل وتريد ننشر عرضك؟ الرابط بالبايو.\n\n#عروض_بغداد #حي_الجامعة #خصومات_بغداد #مطاعم_بغداد #بغداد",
+ "user_tags": [],
+ "attempts": 2,
+ "last_error": "400 {\"error\":{\"message\":\"User is performing too many actions\",\"type\":\"OAuthException\",\"is_transient\":false,\"code\":9,\"error_subcode\":2207042,\"error_user_title\":\"Media Publish Limit Exceeded\",\"error_user_msg\":\"You reached maximum number of posts that is allowed to be published by Content Publishing API.\",\"fbtrace_id\":\"A7mZU8eIwYdpk-7hKauw92j\"}}",
+ "result": {
+  "published_at": "2026-10-26T11:45:01.653500+00:00",
+  "error": "400 {\"error\":{\"message\":\"User is performing too many actions\",\"type\":\"OAuthException\",\"is_transient\":false,\"code\":9,\"error_subcode\":2207042,\"error_user_title\":\"Media Publish Limit Exceeded\",\"error_user_msg\":\"You reached maximum number of posts that is allowed to be published by Content Publishing API.\",\"fbtrace_id\":\"AnbQgD4zWEGOUQZnZzylXPF\"}}"
+ }
+}
