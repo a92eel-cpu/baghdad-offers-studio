@@ -194,7 +194,10 @@ def main():
                 print("أجّلت", j["id"], "إلى", j["not_before"]); save_state(); continue
             ok, why = can_publish(j.get("kind", "post"))
             if not ok:
-                print("انتظار:", why, j["id"]); break
+                print("انتظار:", why, j["id"])
+                if why == "gap" and end - time.time() > 120:
+                    time.sleep(60); continue  # ننتظر الفاصل ضمن نفس التشغيل
+                break
             publish_one(f, j); save_state()
             continue
         if not q: break
