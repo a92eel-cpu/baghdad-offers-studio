@@ -24,6 +24,45 @@ TOKEN, USER = os.environ.get("IG_TOKEN"), os.environ.get("IG_USER_ID")
 HOST = os.environ.get("IG_HOST") or "graph.instagram.com"
 API = f"https://{HOST}/v21.0"
 
+# --- حماية من الحظر (أضيفت 2026-10-27 بعد تقييد الحساب 25–27 ت1، بطلب عقيل) ---
+PAUSE, LOG = ROOT / "queue/pause.json", ROOT / "queue/log.json"
+GAP_MIN = float(os.environ.get("GAP_MIN", "60"))        # عرض واحد كل ساعة كحد أدنى
+MAX_PER_DAY = int(os.environ.get("MAX_PER_DAY", "10"))  # 10 عروض باليوم (كل عرض = منشور + ستوري)
+STALE_HOURS = float(os.environ.get("STALE_HOURS", "24"))  # عرض أقدم من 24 ساعة ما ينشر (خصومات Baly تتبدل)
+BLOCK_SIGNS = ("too many actions", "2207051", "action is blocked", "request limit reached")
+UTC = datetime.timezone.utc
+
+
+def _now(): return datetime.datetime.now(UTC)
+
+
+def paused():
+    if not PAUSE.exists(): return False
+    until = datetime.datetime.fromisoformat(json.loads(PAUSE.read_text())["until"])
+    return until > _now()
+
+
+def trip(reason, hours=24):
+    until = _now() + datetime.timedelta(hours=hours)
+    PAUSE.write_text(json.dumps({"until": until.isoformat(), "reason": reason[:300]}, ensure_ascii=False, indent=1))
+    print("⛔ إنستغرام قيّد النشر — موقوف لحد", until.isoformat())
+
+
+def recent():
+    if not LOG.exists(): return []
+    return [e for e in json.loads(LOG.read_text()) if datetime.datetime.fromisoformat(e) > _now() - datetime.timedelta(hours=24)]
+
+
+def allowed():
+    r = recent()
+    if len(r) >= MAX_PER_DAY: return False, "cap"
+    if r and (_now() - max(datetime.datetime.fromisoformat(e) for e in r)).total_seconds() < GAP_MIN * 60: return False, "gap"
+    return True, ""
+
+
+def note_published():
+    LOG.write_text(json.dumps(recent() + [_now().isoformat()], indent=1))
+
 
 def call(method, path, **params):
     params["access_token"] = TOKEN
@@ -94,11 +133,14 @@ def publish_one(f, j):
             res["story_id"] = publish(image_url=j["story_url"], media_type="STORIES")
     except Exception as e:
         res["error"] = str(e); print(f.name, "ERROR", e)
+        if "post_id" not in res and any(b in str(e) for b in BLOCK_SIGNS):
+            trip(str(e)); return  # العرض يبقى بالطابور، وما نعيد المحاولة لحد ما يرتفع القيد
         if "post_id" not in res:
             j["attempts"] = j.get("attempts", 0) + 1
             if j["attempts"] < 2:
                 j["last_error"] = str(e); f.write_text(json.dumps(j, ensure_ascii=False, indent=1)); return
     j["result"] = res
+    if "post_id" in res: note_published()
     (DONE / f.name).write_text(json.dumps(j, ensure_ascii=False, indent=1)); f.unlink()
     print(f.name, res, flush=True)
 
@@ -121,10 +163,24 @@ def main():
     if not (TOKEN and USER):
         print("IG_TOKEN / IG_USER_ID ناقصة — ما نشرت شي."); return 0
     DONE.mkdir(parents=True, exist_ok=True)
+    if paused():
+        print("النشر موقوف مؤقتاً:", PAUSE.read_text()); return 0
     end = time.time() + 60 * float(os.environ.get("MAX_MINUTES", "25"))
-    while time.time() < end:
+    while time.time() < end and not paused():
         items = due()
+        # العروض القديمة تنتهي بدون نشر
+        for f, j in list(items):
+            nb = datetime.datetime.fromisoformat(j.get("not_before", "2000-01-01T00:00:00+00:00"))
+            if _now() - nb > datetime.timedelta(hours=STALE_HOURS):
+                j["result"] = {"expired": True, "at": _now().isoformat()}
+                (DONE / f.name).write_text(json.dumps(j, ensure_ascii=False, indent=1)); f.unlink()
+                print(f.name, "انتهى بدون نشر (قديم)"); items.remove((f, j))
         if items:
+            ok, why = allowed()
+            if not ok:
+                print("انتظار:", why)
+                if why == "gap" and end - time.time() > 120: time.sleep(60); continue
+                break
             if quota_left() < 2:
                 print("حد إنستغرام اليومي خلص — نكمل بالتشغيل الجاي."); break
             publish_one(*items[0]); save_state()
